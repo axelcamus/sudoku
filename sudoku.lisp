@@ -35,7 +35,16 @@
     (dotimes (x 9)
       (setf (aref *tab* x y) (+ 1 (random 9))))))
 
-(defun eraseTab (tab)
+;;avoir une liste (1 à 9) correspondant à un des tableaux 3x3
+;;parcourir en x (le tableau 9x9)
+;;parcourir en y (le tableau 9x9)
+;;en déduire une nouvelle liste qui exclu les valeurs impossibles
+;;faire un random sur cette nouvelle liste
+;;et ajouter la valeur correspondante
+;;supprimer la valeur ajouter de la première liste
+;;recommencer pour tout les tableaux 3x3
+
+(defun erase (tab)
   (if (equal tab *tab*)
       (setf *tab* (make-array '(9 9)))
       (if (equal tab *playerTab*)
