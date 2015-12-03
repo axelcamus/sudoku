@@ -60,7 +60,8 @@
 (defun generate ()
   (dotimes (y *smallTabSize*)
     (dotimes (x *smallTabSize*)
-      (generateSmallTab (* x *smallTabSize*) (* y *smallTabSize*)))))
+      (generateSmallTab (* x *smallTabSize*) (* y *smallTabSize*))))
+  (generatePlayerTab))
 
 (defun generateSmallTab (i j)
   (let ((l (makeTabList *tabSize* '())))
@@ -81,6 +82,16 @@
     (if (> 0 (aref *tab* x 0))
 	(remove (aref *tab* x 0) l)))
   (setf (aref *tab* i j) (nth (random (list-length l)) l)))
+
+(defun generatePlayerTab ()
+  (erase *playerTab*)
+  (dotimes (n 30)
+    (let ((x (random *tabSize*))
+	  (y (random *tabSize*)))
+    (setf (aref *playerTab* x y) (aref *tab* x y))))) 
+  
+
+
 
 (defun erase (tab)
   (if (equal tab *tab*)
