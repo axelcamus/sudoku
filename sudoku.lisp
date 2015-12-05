@@ -53,7 +53,8 @@
 	  (format t "~D " (aref tab x y))))
     (if (= (mod (+ 1 y) *smallTabSize*) 0)
 	(format t "~%~%")
-	(format t "~%"))))))
+	(format t "~%"))))
+      
 
 ;;################# GENERATE ###############################
 
@@ -88,7 +89,7 @@
   (dotimes (n 30)
     (let ((x (random *tabSize*))
 	  (y (random *tabSize*)))
-    (setf (aref *playerTab* x y) (aref *tab* x y))))) 
+    (setf (aref *playerTab* x y) (aref *tab* x y)))))
   
 
 
@@ -97,6 +98,31 @@
   (if (equal tab *tab*)
       (setf *tab* (make-array (make-list 2 :initial-element *tabSize*))))
       (if (equal tab *playerTab*)
-	  (setf *playerTab* (make-array (make-list 2 :initial-element *tabSize*)))))))
+	  (setf *playerTab* (make-array (make-list 2 :initial-element *tabSize*)))))
       
-  
+
+;;#################### GET ###########################
+
+(defun getPos()
+  (let ((l (string-to-list (read-line))))
+    (if (member (car l) *alpha*)
+	(if (<= (1+ (position (car l) *alpha*)) *tabSize*)
+	    (if (and (> (car (cdr l)) 0) (<= (car (cdr l)) *tabSize*))
+	    l)))))
+       
+(defun getVal()
+  (let ((n (read)))
+    (if (and (numberp n) (> n 0) (<= n *tabSize*))
+	n)))
+
+(defun string-to-list (str)
+  (if (not (streamp str))
+      (string-to-list (make-string-input-stream str))
+      (if (listen str)
+	  (cons (read str) (string-to-list str))
+	  nil)))
+
+(defun setValueToPlayerTab (val l)
+  (let ((x (position (car l) *alpha*))
+	(y (1- (nth 1 l))))
+      (setf (aref *playerTab* x y) val)))
