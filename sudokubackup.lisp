@@ -126,16 +126,3 @@
   (let ((x (position (car l) *alpha*))
 	(y (1- (nth 1 l))))
       (setf (aref *playerTab* x y) val)))
-
-
-(defun get-file (filename)
-  (with-open-file (stream filename)
-    (loop for line = (read-line stream nil)
-          while line
-          collect line)))
-
-(defun test (l str)
-  (if (not (endp l))
-      (test (cdr l) (concatenate 'string str (car l)))
-      str))
-
