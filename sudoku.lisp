@@ -44,14 +44,14 @@
 (defun draw (tab)
   (format t "  ")
   (draw-alpha-line *alpha* 0)
-  (dotimes (y *tabSize*)
+  (dotimes (x *tabSize*)
     (let ()
-      (format t "~D " (1+ y)))
-    (dotimes (x *tabSize*)
-      (if (= (mod x *smallTabSize*) 0)
+      (format t "~D " (1+ x)))
+    (dotimes (y *tabSize*)
+      (if (= (mod y *smallTabSize*) 0)
 	  (format t " ~D " (aref tab x y))
 	  (format t "~D " (aref tab x y))))
-    (if (= (mod (+ 1 y) *smallTabSize*) 0)
+    (if (= (mod (+ 1 x) *smallTabSize*) 0)
 	(format t "~%~%")
 	(format t "~%"))))
       
@@ -115,6 +115,11 @@
     (if (and (numberp n) (> n 0) (<= n *tabSize*))
 	n)))
 
+(defun setValueToPlayerTab (val l)
+  (let ((x (position (car l) *alpha*))
+	(y (1- (nth 1 l))))
+      (setf (aref *playerTab* x y) val)))
+
 (defun string-to-list (str)
   (if (not (streamp str))
       (string-to-list (make-string-input-stream str))
@@ -122,20 +127,35 @@
 	  (cons (read str) (string-to-list str))
 	  nil)))
 
-(defun setValueToPlayerTab (val l)
-  (let ((x (position (car l) *alpha*))
-	(y (1- (nth 1 l))))
-      (setf (aref *playerTab* x y) val)))
-
-
-(defun get-file (filename)
-  (with-open-file (stream filename)
-    (loop for line = (read-line stream nil)
-          while line
-          collect line)))
-
-(defun test (l str)
-  (if (not (endp l))
-      (test (cdr l) (concatenate 'string str (car l)))
+(defun file-strings (stream str)
+  (if (listen stream)
+      (file-strings stream (concatenate 'string str (read-line stream nil)))
       str))
+
+(defun get-file (file)
+  (with-open-file (stream file)
+    (let ((str ""))
+      (car (string-to-list (file-strings stream str))))))
+
+
+(defun list-to-array (l)
+  (make-array (list (length l) (length (first l))) :initial-contents l))
+
+(defun sudoku (n)
+  (let ((file nil)
+	(grid nil))
+    (if (<= n 0)
+	(format t "(sudoku n) avec n > 0~%")
+	(if (< n 10)
+	    (setf file (open (concatenate 'string "./Grids/0" (write-to-string n) ".sudoku") :if-does-not-exist nil))
+	    (setf file (open (concatenate 'string "./Grids/" (write-to-string n) ".sudoku") :if-does-not-exist nil))))
+    (if (not (eql file nil))
+	(let ()
+	  (setf grid (list-to-array (get-file file)))
+	  (close file)
+	  (draw grid))
+	(format t "numéro de grille invalide~%"))))
+
+
+
 
