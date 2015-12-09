@@ -29,23 +29,25 @@
 ;;#################### GET ###########################
 
 (defun readPos()
+  (format t "Colonne Ligne: ")
   (let ((pos (string-to-list (read-line))))
     (if (member (car pos) *alpha*)
 	(if (numberp (car (cdr pos)))
 	    pos
-	    (format t "lettre nombre   ex: A 3~%"))
-	(format t "lettre nombre   ex: A 3~%"))))
+	    (format t "Lettre nombre   ex: A 3~%"))
+	(format t "Lettre nombre   ex: A 3~%"))))
        
 (defun readVal()
+  (format t "Valeur: ")
   (let ((n (read)))
     (if (numberp n)
 	n
-	(format t "chiffre entre 1 et 9~%"))))
+	(format t "Chiffre entre 1 et 9~%"))))
 
 (defun setValue (grid val pos)
   (let ((x (position (car pos) *alpha*))
 	(y (1- (nth 1 pos))))
-    (setf (aref grid x y) val)))
+       (setf (aref grid y x) val)))
 
 ;;############# LOAD GRID #############################
 
@@ -84,17 +86,30 @@
      (load-grid (concatenate 'string "./Grids/0" (write-to-string n) ".sudoku"))
      (load-grid (concatenate 'string "./Grids/" (write-to-string n) ".sudoku"))))
 
+(defun copy-grid (grid)
+  (let*((dimensions (array-dimensions grid))
+       (clean-grid (make-array dimensions)))
+    (dotimes (i (car dimensions))
+      (dotimes (j (cadr dimensions))
+	(setf (aref clean-grid i j) (aref grid i j))))
+    clean-grid))
+
 ;;##################### sudoku #######################
 
-(defun play (grid size)
+(defun play (grid size clean-grid)
   (draw grid size)
-  (let((pos (readpos))
-       (val (readval)))
-    (if (not (eq (car pos) 'Q))
-	(let()
-	  (if (and (not (eq pos nil)) (not (eq val nil)))
-	      (setvalue grid val pos))
-	  (play grid size)))))
+  (let((pos (readpos)))
+    (if (or (equal pos nil) (>= (position (car pos) *alpha*) size) (> (car (cdr pos)) size) (<= (car (cdr pos)) 0))
+	(format t "Lettre entre ~A et ~A ~%Nombre entre 1 et ~D~%" (car *alpha*) (nth (1- size) *alpha*) size)
+	  (if (/= (aref clean-grid (- (cadr pos) 1) (position (car pos) *alpha*)) 0)
+	      (format t "Case non modifiable.~%")
+	      (let((val (readval)))
+		(if (or (eql val nil) (> val size) (<= val 0))
+		    (format t "Valeur entre 1 et ~D~%" size)
+		    (setvalue grid val pos)))))
+    (if (verify grid size)
+	(format t "Vous avez gagné ! :)~%")
+	(play grid size clean-grid))))
 
 (defun sudoku (grid)
   (if (/= (car (array-dimensions grid)) (car (cdr (array-dimensions grid))))
@@ -104,4 +119,54 @@
 	    (format t "Dimensions invalides : la grille doit être divisible en x parties de x*x membres~%")
 	    (if (> size (length *alpha*))
 		(format t "Dimensions invalides : pas assez de lettres pour représenter la grille~%")
-		(play grid size))))))
+		(play grid size (copy-grid grid)))))))
+
+(defun make-int-list (n)
+  (if (< n 1)
+      nil
+      (cons n (make-int-list (1- n)))))
+
+;;######################## VERIFY ####################################
+
+(defun verify-line (grid x y l)
+  (if (>= x 0)
+      (verify-line grid (1- x) y (remove (aref grid y x) l))
+      (= (length l) 0)))
+	
+
+(defun verify-column (grid x y l)
+  (if (>= y 0)
+      (verify-column grid x (1- y) (remove (aref grid y x) l))
+      (= (length l) 0)))
+
+(defun verify-block (grid i j x y l size)
+  (if (>= x 0)
+      (if (> y 0)
+	  (verify-block grid i j x (- y 1) (remove (aref grid (+ (* i size) x) (+ (* j size) y)) l) size)
+	  (verify-block grid i j (- x 1) (- size 1) (remove (aref grid (+ (* i size) x) (+ (* j size) y)) l) size))
+      (= (length l) 0)))
+
+(defun verify-lc (grid n l size)
+  (if (> n 0)
+      (and
+       (verify-line grid size n l)
+       (verify-column grid n size l)
+       (verify-lc grid (1- n) l size))
+      T))
+
+(defun verify-blocks (grid i j l size)
+  (if (verify-block grid i j (- (isqrt size) 1) (- (isqrt size) 1) l (isqrt size))
+      (if (> i 0)
+	  (if (> j 0)
+	      (verify-blocks grid i (- j 1) l size)
+	      (verify-blocks grid (- i 1) (- (isqrt size) 1) l size))
+	  t)
+      nil))
+
+(defun verify (grid size)
+  (let ((l (make-int-list size)))
+    (and (verify-lc grid (- size 1) l (- size 1)) (verify-blocks grid (- (isqrt size) 1) (- (isqrt size) 1) l size))))
+
+	  
+      
+
